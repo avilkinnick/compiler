@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.23)
+
+project(compiler LANGUAGES C)
+
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+add_executable(compiler)
+
+target_sources(compiler
+    PRIVATE
+        src/main.c
+)
+
+if(MSVC)
+    target_compile_options(compiler
+        PRIVATE
+            /W3
+    )
+else()
+    target_compile_options(compiler
+        PRIVATE
+            -Wall -Wextra -Wpedantic
+    )
+endif()
+
+set_target_properties(compiler
+    PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
+)
