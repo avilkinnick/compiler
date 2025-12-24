@@ -61,25 +61,24 @@ void* linear_allocator_allocate(
     assert(size > 0);
     assert(is_power_of_two(alignment));
 
-    const size_t remainder = allocator->offset % alignment;
-    const size_t padding = remainder ? alignment - remainder : 0;
+    const size_t alignment_mask = alignment - 1;
+    const size_t aligned_offset = (allocator->offset + alignment_mask)
+                                & ~(alignment_mask);
 
-    if (size > allocator->capacity - padding - allocator->offset)
+    if (size > allocator->capacity - aligned_offset)
     {
         fprintf(stderr, "Linear allocator could not allocate memory\n"
             "offset: %zu; capacity: %zu; requested size: %zu;\n"
-            "requested alignment: %zu; padding: %zu\n",
-            allocator->offset, allocator->capacity,
-            size, alignment, padding);
+            "requested alignment: %zu; aligned offset: %zu\n",
+            allocator->offset, allocator->capacity, size,
+            alignment, aligned_offset);
 
         return NULL;
     }
 
-    allocator->offset += padding;
+    void* const ptr = (char*)allocator->data + aligned_offset;
 
-    void* const ptr = (char*)allocator->data + allocator->offset;
-
-    allocator->offset += size;
+    allocator->offset = aligned_offset + size;
 
     return ptr;
 }
