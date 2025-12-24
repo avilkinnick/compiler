@@ -1,0 +1,85 @@
+#include "LinearAllocator.h"
+
+#include <assert.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+static bool is_power_of_two(const size_t x)
+{
+    return x && !(x & (x - 1));
+}
+
+void linear_allocator_zero(LinearAllocator* const allocator)
+{
+    assert(allocator != NULL);
+
+    allocator->data = NULL;
+}
+
+bool linear_allocator_create(
+    LinearAllocator* const allocator,
+    const size_t capacity
+)
+{
+    assert(allocator != NULL);
+    assert(allocator->data == NULL);
+    assert(capacity > 0);
+
+    allocator->data = malloc(capacity);
+    if (allocator->data == NULL)
+    {
+        fprintf(stderr, "Failed to create linear allocator "
+            "with capacity %zu\n", capacity);
+
+        return false;
+    }
+
+    allocator->offset = 0;
+    allocator->capacity = capacity;
+
+    return true;
+}
+
+void linear_allocator_destroy(LinearAllocator* const allocator)
+{
+    assert(allocator != NULL);
+
+    free(allocator->data);
+    allocator->data = NULL;
+}
+
+void* linear_allocator_allocate(
+    LinearAllocator* const allocator,
+    const size_t size,
+    const size_t alignment
+)
+{
+    assert(allocator != NULL);
+    assert(allocator->data != NULL);
+    assert(size > 0);
+    assert(is_power_of_two(alignment));
+
+    const size_t remainder = allocator->offset % alignment;
+    const size_t padding = remainder ? alignment - remainder : 0;
+
+    if (size > allocator->capacity - padding - allocator->offset)
+    {
+        fprintf(stderr, "Linear allocator could not allocate memory\n"
+            "offset: %zu; capacity: %zu; requested size: %zu;\n"
+            "requested alignment: %zu; padding: %zu\n",
+            allocator->offset, allocator->capacity,
+            size, alignment, padding);
+
+        return NULL;
+    }
+
+    allocator->offset += padding;
+
+    void* const ptr = (char*)allocator->data + allocator->offset;
+
+    allocator->offset += size;
+
+    return ptr;
+}

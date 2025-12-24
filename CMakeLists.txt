@@ -9,7 +9,15 @@ add_executable(compiler)
 
 target_sources(compiler
     PRIVATE
+        src/LinearAllocator.c
         src/main.c
+
+    PRIVATE
+        FILE_SET HEADERS
+        BASE_DIRS
+            include
+        FILES
+            include/LinearAllocator.h
 )
 
 if(MSVC)
