@@ -13,6 +13,7 @@ target_sources(compiler
         src/HashTableString.c
         src/LinearAllocator.c
         src/main.c
+        src/math_funcs.c
 
     PRIVATE
         FILE_SET HEADERS
@@ -21,6 +22,7 @@ target_sources(compiler
         FILES
             include/HashTableString.h
             include/LinearAllocator.h
+            include/math_funcs.h
 )
 
 if(MSVC)

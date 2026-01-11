@@ -1,16 +1,13 @@
 #include "LinearAllocator.h"
 
+#include "math_funcs.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-static bool is_power_of_two(const size_t x)
-{
-    return x && !(x & (x - 1));
-}
 
 void linear_allocator_zero(LinearAllocator* const allocator)
 {
@@ -69,24 +66,14 @@ void* linear_allocator_allocate(
     assert(allocator->offset <= allocator->capacity);
     assert(allocator->capacity > 0);
     assert(size > 0);
+    assert(alignment <= allocator->capacity);
     assert(is_power_of_two(alignment));
 
-    const size_t alignment_mask = alignment - 1;
-
-    if (allocator->offset > SIZE_MAX - alignment_mask)
+    size_t aligned_offset;
+    if (!ALIGN_UP(allocator->offset, alignment, &aligned_offset))
     {
-        fprintf(stderr, "Linear allocator could not allocate memory\n"
-            "(allocator->offset > SIZE_MAX - alignment_mask)\n"
-            "offset: %zu; capacity: %zu; requested size: %zu\n"
-            "requested alignment: %zu; alignment_mask: %zu\n",
-            allocator->offset, allocator->capacity, size,
-            alignment, alignment_mask);
-
         return NULL;
     }
-
-    const size_t aligned_offset = (allocator->offset + alignment_mask)
-                                & ~(alignment_mask);
 
     if ((aligned_offset > allocator->capacity)
         || (size > allocator->capacity - aligned_offset))
