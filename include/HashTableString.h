@@ -22,7 +22,9 @@ void hash_table_string_zero(HashTableString* const table);
 bool hash_table_string_create(
     HashTableString* const table,
     const uint32_t capacity,
-    const size_t strings_buffer_capacity
+    const size_t strings_buffer_size
 );
+
+void hash_table_string_destroy(HashTableString* const table);
 
 #endif // HASH_TABLE_STRING_H
