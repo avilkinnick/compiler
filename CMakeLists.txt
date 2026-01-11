@@ -10,6 +10,7 @@ add_executable(compiler)
 
 target_sources(compiler
     PRIVATE
+        src/HashTableString.c
         src/LinearAllocator.c
         src/main.c
 
@@ -18,6 +19,7 @@ target_sources(compiler
         BASE_DIRS
             include
         FILES
+            include/HashTableString.h
             include/LinearAllocator.h
 )
 
