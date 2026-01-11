@@ -71,6 +71,8 @@ bool hash_table_string_create(
 
     if (!linear_allocator_create(&table->allocator, total_size))
     {
+        hash_table_string_destroy(table);
+
         return false;
     }
 
