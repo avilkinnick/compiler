@@ -4,12 +4,12 @@ project(compiler LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
 add_executable(compiler)
 
 target_sources(compiler
     PRIVATE
-        src/HashTableString.c
         src/LinearAllocator.c
         src/main.c
 
@@ -18,7 +18,6 @@ target_sources(compiler
         BASE_DIRS
             include
         FILES
-            include/HashTableString.h
             include/LinearAllocator.h
 )
 

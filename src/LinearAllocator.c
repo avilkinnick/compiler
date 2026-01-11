@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,6 +17,8 @@ void linear_allocator_zero(LinearAllocator* const allocator)
     assert(allocator != NULL);
 
     allocator->data = NULL;
+    allocator->offset = 0;
+    allocator->capacity = 0;
 }
 
 bool linear_allocator_create(
@@ -25,6 +28,8 @@ bool linear_allocator_create(
 {
     assert(allocator != NULL);
     assert(allocator->data == NULL);
+    assert(allocator->offset == 0);
+    assert(allocator->capacity == 0);
     assert(capacity > 0);
 
     allocator->data = malloc(capacity);
@@ -45,9 +50,12 @@ bool linear_allocator_create(
 void linear_allocator_destroy(LinearAllocator* const allocator)
 {
     assert(allocator != NULL);
+    assert(allocator->offset <= allocator->capacity);
 
     free(allocator->data);
     allocator->data = NULL;
+
+    linear_allocator_zero(allocator);
 }
 
 void* linear_allocator_allocate(
@@ -58,14 +66,30 @@ void* linear_allocator_allocate(
 {
     assert(allocator != NULL);
     assert(allocator->data != NULL);
+    assert(allocator->offset <= allocator->capacity);
+    assert(allocator->capacity > 0);
     assert(size > 0);
     assert(is_power_of_two(alignment));
 
     const size_t alignment_mask = alignment - 1;
+
+    if (allocator->offset > SIZE_MAX - alignment_mask)
+    {
+        fprintf(stderr, "Linear allocator could not allocate memory\n"
+            "(allocator->offset > SIZE_MAX - alignment_mask)\n"
+            "offset: %zu; capacity: %zu; requested size: %zu\n"
+            "requested alignment: %zu; alignment_mask: %zu\n",
+            allocator->offset, allocator->capacity, size,
+            alignment, alignment_mask);
+
+        return NULL;
+    }
+
     const size_t aligned_offset = (allocator->offset + alignment_mask)
                                 & ~(alignment_mask);
 
-    if (size > allocator->capacity - aligned_offset)
+    if ((aligned_offset > allocator->capacity)
+        || (size > allocator->capacity - aligned_offset))
     {
         fprintf(stderr, "Linear allocator could not allocate memory\n"
             "offset: %zu; capacity: %zu; requested size: %zu;\n"
