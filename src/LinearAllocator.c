@@ -75,8 +75,8 @@ void* linear_allocator_allocate(
         return NULL;
     }
 
-    if ((aligned_offset > allocator->capacity)
-        || (size > allocator->capacity - aligned_offset))
+    if ((aligned_offset > allocator->capacity) ||
+        (size > allocator->capacity - aligned_offset))
     {
         fprintf(stderr, "Linear allocator could not allocate memory\n"
             "offset: %zu; capacity: %zu; requested size: %zu;\n"

@@ -10,9 +10,9 @@
 typedef struct HashTableString
 {
     LinearAllocator allocator;
-    size_t* offsets;
-    uint32_t* hashes;
-    uint16_t* lengths;
+    size_t hashes_offset;
+    size_t lengths_offset;
+    size_t busy_slots_offset;
     uint32_t size;
     uint32_t capacity;
 } HashTableString;
