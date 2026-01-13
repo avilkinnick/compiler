@@ -122,7 +122,8 @@ LinearAllocatorResult linear_allocator_create_arrays(
             *offsets[i] = allocator->offset;
         }
 
-        if (!linear_allocator_allocate(allocator, sizes[i], alignments[i]))
+        if (linear_allocator_allocate(allocator, sizes[i],
+            alignments[i]) == NULL)
         {
             linear_allocator_destroy(allocator);
 
