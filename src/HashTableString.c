@@ -10,6 +10,14 @@
 #include <stdio.h>
 #include <string.h>
 
+enum
+{
+    OFFSETS,
+    HASHES,
+    LENGTHS,
+    BUSY_SLOTS
+};
+
 void hash_table_string_zero(HashTableString* const table)
 {
     assert(table != NULL);
@@ -38,76 +46,29 @@ bool hash_table_string_create(
     assert(capacity > 0);
     assert(strings_buffer_size >= 2 * (size_t)capacity);
 
-    size_t offsets_size = capacity * sizeof(size_t);
-    size_t hashes_size = capacity * sizeof(uint32_t);
-    size_t lengths_size = capacity * sizeof(uint16_t);
-    size_t busy_slots_size = capacity * sizeof(uint32_t);
+    size_t sizes[] = {
+        [OFFSETS] = sizeof(size_t),
+        [HASHES] = sizeof(uint32_t),
+        [LENGTHS] = sizeof(uint16_t),
+        [BUSY_SLOTS] = sizeof(uint32_t)
+    };
 
-    const size_t offsets_alignment = sizeof(uint32_t);
-    const size_t hashes_alignment = sizeof(uint16_t);
-    const size_t lengths_alignment = sizeof(uint32_t);
-    const size_t busy_slots_alignment = sizeof(char);
+    const size_t alignments[] = {
+        [OFFSETS] = sizeof(uint32_t),
+        [HASHES] = sizeof(uint16_t),
+        [LENGTHS] = sizeof(uint32_t),
+        [BUSY_SLOTS] = sizeof(char)
+    };
 
-    if (!ALIGN_UP(offsets_size, offsets_alignment, &offsets_size) ||
-        !ALIGN_UP(hashes_size, hashes_alignment, &hashes_size) ||
-        !ALIGN_UP(lengths_size, lengths_alignment, &lengths_size) ||
-        !ALIGN_UP(busy_slots_size, busy_slots_alignment, &busy_slots_size))
-    {
-        return false;
-    }
+    size_t* const offsets[] = {
+        [OFFSETS] = NULL,
+        [HASHES] = &table->hashes_offset,
+        [LENGTHS] = &table->lengths_offset,
+        [BUSY_SLOTS] = &table->busy_slots_offset
+    };
 
-    size_t total_size = offsets_size + hashes_size +
-        lengths_size + busy_slots_size;
-
-    if (strings_buffer_size > SIZE_MAX - total_size)
-    {
-        fputs("Failed to create hash table string\n"
-            "Too big strings buffer size\n", stderr);
-
-        return false;
-    }
-
-    total_size += strings_buffer_size;
-
-    if (!linear_allocator_create(&table->allocator, total_size))
-    {
-        hash_table_string_destroy(table);
-
-        return false;
-    }
-
-    if (linear_allocator_allocate(&table->allocator,
-        offsets_size, offsets_alignment) == NULL)
-    {
-        hash_table_string_destroy(table);
-
-        return false;
-    }
-
-    table->hashes_offset = table->allocator.offset;
-
-    if (linear_allocator_allocate(&table->allocator,
-        hashes_size, hashes_alignment) == NULL)
-    {
-        hash_table_string_destroy(table);
-
-        return false;
-    }
-
-    table->lengths_offset = table->allocator.offset;
-
-    if (linear_allocator_allocate(&table->allocator,
-        lengths_size, lengths_alignment) == NULL)
-    {
-        hash_table_string_destroy(table);
-
-        return false;
-    }
-
-    table->busy_slots_offset = table->allocator.offset;
-
-    if (linear_allocator_allocate(&table->allocator,
-        busy_slots_size, busy_slots_alignment) == NULL)
+    if (linear_allocator_create_arrays(&table->allocator, 4, capacity, sizes,
+        alignments, strings_buffer_size, offsets) != LINEAR_ALLOCATOR_SUCCESS)
     {
         hash_table_string_destroy(table);
 
