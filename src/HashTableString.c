@@ -1,22 +1,12 @@
 #include "HashTableString.h"
 
 #include "LinearAllocator.h"
-#include "math_funcs.h"
 
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
-
-enum
-{
-    OFFSETS,
-    HASHES,
-    LENGTHS,
-    BUSY_SLOTS
-};
 
 void hash_table_string_zero(HashTableString* const table)
 {
@@ -45,6 +35,14 @@ bool hash_table_string_create(
     assert(table->capacity == 0);
     assert(capacity > 0);
     assert(strings_buffer_size >= 2 * (size_t)capacity);
+
+    enum
+    {
+        OFFSETS,
+        HASHES,
+        LENGTHS,
+        BUSY_SLOTS
+    };
 
     size_t sizes[] = {
         [OFFSETS] = sizeof(size_t),
